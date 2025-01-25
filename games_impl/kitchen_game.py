@@ -18,6 +18,8 @@ class KitchenGame(AbstractGame):
         return game_conditions
 
     def check_game_end(self, person: Person) -> str:
+        if ('end' in person.inventory) or (person.health <= 0):
+            return 'Игра окончена'
         pass
 
 

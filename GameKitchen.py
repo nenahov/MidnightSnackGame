@@ -47,6 +47,10 @@ def send_help(message):
     chat_id = message.chat.id
     removePrevMenu(message)
     person = get_person(chat_id)
+    end_text = game.check_game_end(person)
+    if end_text is not None and end_text != "":
+        bot.send_message(message.chat.id, end_text)
+        return
     text = f'{message.chat.first_name}, Вы управляете "{person.name}". Сейчас вы находитесь в локации "{person.location}". Вам нужно "{person.goal}"'
     bot.send_message(chat_id, text, reply_markup=get_markup(person))
 
@@ -62,6 +66,10 @@ def handle_query(call):
     condition = game.get_condition_by_id(call.data, person)
     if condition is not None:
         condition.apply_state_condition(person)
+        end_text = game.check_game_end(person)
+        if end_text is not None and end_text != "":
+            bot.send_message(call.message.chat.id, end_text)
+            return
         bot.send_message(call.message.chat.id, condition.text, reply_markup=get_markup(person))
         return
 
