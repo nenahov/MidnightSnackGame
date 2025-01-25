@@ -1,22 +1,19 @@
-import random
-
 import telebot
 from colorama import init, Fore
 from telebot import types
 
-from domain.game_conditions import game_conditions
-from domain.person import Person
+from games_impl.kitchen_game import KitchenGame
 from my_keys import API_TOKEN
 
 # словарь для хранения Персонажей (Person) для каждого user_id
 user_person_dict = dict()
-
+game = KitchenGame()
 init(autoreset=True)
 
 bot = telebot.TeleBot(API_TOKEN)
 
-ids = [cond.id for cond in game_conditions]
-if len(game_conditions) != len(set(ids)):
+ids = [cond.id for cond in game.get_all_conditions()]
+if len(game.get_all_conditions()) != len(set(ids)):
     print(Fore.RED + "Есть повторяющиеся id у состояний!")
 
 
@@ -56,40 +53,29 @@ def handle_query(call):
     person = get_person(chat_id)
     print(
         f'Получено сообщение от {call.message.chat.first_name} {call.message.chat.last_name}: ' + Fore.LIGHTYELLOW_EX + f'{call.data}')
-    for condition in game_conditions:
-        if condition.id == call.data:
-            if condition.check_state_condition(person):
-                condition.apply_state_condition(person)
-                bot.send_message(call.message.chat.id, condition.text, reply_markup=get_markup(person))
-                return
+    condition = game.get_condition_by_id(call.data, person)
+    if condition is not None:
+        condition.apply_state_condition(person)
+        bot.send_message(call.message.chat.id, condition.text, reply_markup=get_markup(person))
+        return
 
     send_help(call.message)
 
 
 def get_markup(person):
     markup = types.InlineKeyboardMarkup()
-    # В цикле перебрать все game_conditions
-    for condition in game_conditions:
-        # Если состояние удовлетворяет условиям
-        if condition.check_state_condition(person):
-            # Добавить меню для перехода в это состояние
-            button = types.InlineKeyboardButton(condition.name, callback_data=condition.id)
-            markup.add(button)
+    # В цикле перебрать все game_conditions, которые удовлетворяют условия для персонажа
+    for condition in game.get_conditions_for_person(person):
+        # Добавить меню для перехода в это состояние
+        button = types.InlineKeyboardButton(condition.name, callback_data=condition.id)
+        markup.add(button)
     return markup
 
 
 def get_person(chat_id):
     person = user_person_dict.get(chat_id)
     if person is None:
-        person = Person('София', 'Женский', {"София"}, 100, 'Утолить голод', 'Комната')
-        # В цикле от 1 до 100 с шагом 10 генерим случайное число
-        for i in range(0, 100, 10):
-            random_number = random.randint(0, 100)
-            # Если число больше 50
-            if i >= random_number:
-                # Добавляем предмет в инвентарь
-                person.inventory.add(f'random{i}')
-
+        person = game.create_person()
         user_person_dict[chat_id] = person
     return person
 
