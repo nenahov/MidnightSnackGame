@@ -8,6 +8,6 @@ setup(
 	author_email='nenahov@gmail.com',
 	packages=['domain'],
 	install_requires=[
-		'telebot',
+		'telebot', 'colorama'
 	],
 )
