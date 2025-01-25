@@ -1,6 +1,6 @@
 # Класс персонажа, у которого есть следующие поля: имя, пол, наличие предметов в инвентаре, здоровье, цель, текущее местоположение
 class Person:
-    def __init__(self, name, gender, inventory, health, goal, location):
+    def __init__(self, name: str, gender: str, inventory: set, health: int, goal: str, location: str):
         self.name = name
         self.gender = gender
         self.inventory = inventory

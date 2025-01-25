@@ -2,15 +2,21 @@ import telebot
 from colorama import init, Fore
 from telebot import types
 
+from domain.abstract_game import AbstractGame
 from games_impl.kitchen_game import KitchenGame
 from my_keys import API_TOKEN
 
-# словарь для хранения Персонажей (Person) для каждого user_id
-user_person_dict = dict()
-game = KitchenGame()
+
+
+# Авто-восстановление цвета шрифта в выводе на консоль
 init(autoreset=True)
 
 bot = telebot.TeleBot(API_TOKEN)
+
+# словарь для хранения Персонажей (Person) для каждого user_id
+user_person_dict = dict()
+game: AbstractGame
+game = KitchenGame()
 
 ids = [cond.id for cond in game.get_all_conditions()]
 if len(game.get_all_conditions()) != len(set(ids)):
