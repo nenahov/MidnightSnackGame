@@ -24,16 +24,12 @@ def send_welcome(message):
                      reply_markup=markup)
 
 
-def get_markup(person):
-    markup = types.InlineKeyboardMarkup()
-    # В цикле перебрать все game_conditions
-    for condition in game_conditions:
-        # Если состояние удовлетворяет условиям
-        if condition.check_state_condition(person):
-            # Добавить меню для перехода в это состояние
-            button = types.InlineKeyboardButton(condition.name, callback_data=condition.id)
-            markup.add(button)
-    return markup
+@bot.message_handler(func=lambda message: True)
+def echo_all(message):
+    removePrevMenu(message)
+    print(f'Получено сообщение от {message.chat.first_name} {message.chat.last_name}: {message.text}')
+    bot.reply_to(message, "Ой, как же кушать хочется. Надо что-то придумать!",
+                 reply_markup=get_markup(get_person(message.chat.id)))
 
 
 @bot.message_handler(commands=['about', 'help'])
@@ -58,20 +54,24 @@ def handle_query(call):
             break
 
 
+def get_markup(person):
+    markup = types.InlineKeyboardMarkup()
+    # В цикле перебрать все game_conditions
+    for condition in game_conditions:
+        # Если состояние удовлетворяет условиям
+        if condition.check_state_condition(person):
+            # Добавить меню для перехода в это состояние
+            button = types.InlineKeyboardButton(condition.name, callback_data=condition.id)
+            markup.add(button)
+    return markup
+
+
 def get_person(chat_id):
     person = user_person_dict.get(chat_id)
     if person is None:
         person = Person('София', 'Женский', {"София"}, 100, 'Утолить голод', 'Комната')
         user_person_dict[chat_id] = person
     return person
-
-
-@bot.message_handler(func=lambda message: True)
-def echo_all(message):
-    removePrevMenu(message)
-    print(f'Получено сообщение от {message.chat.first_name} {message.chat.last_name}: {message.text}')
-    bot.reply_to(message, "Ой, как же кушать хочется. Надо что-то придумать!",
-                 reply_markup=get_markup(get_person(message.chat.id)))
 
 
 def removePrevMenu(message):
