@@ -47,12 +47,16 @@ def handle_query(call):
     # Убираем меню
     removePrevMenu(call.message)
     person = get_person(chat_id)
+    print(f'Получено сообщение от {call.message.chat.first_name} {call.message.chat.last_name}: {call.data}')
     for condition in game_conditions:
         if condition.id == call.data:
-            condition.apply_state_condition(person)
-            bot.send_message(call.message.chat.id, condition.text, reply_markup=get_markup(person))
-            break
-
+            if condition.check_state_condition(person):
+                condition.apply_state_condition(person)
+                bot.send_message(call.message.chat.id, condition.text, reply_markup=get_markup(person))
+                break
+            else:
+                send_help(call.message)
+                break
 
 def get_markup(person):
     markup = types.InlineKeyboardMarkup()
