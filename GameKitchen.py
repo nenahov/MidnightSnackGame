@@ -34,14 +34,6 @@ def send_welcome(message):
                      reply_markup=markup)
 
 
-@bot.message_handler(func=lambda message: True)
-def echo_all(message):
-    removePrevMenu(message)
-    print(f'Получено сообщение от {message.chat.first_name} {message.chat.last_name}: ' + Fore.CYAN + f'{message.text}')
-    bot.reply_to(message, "Ой, как же кушать хочется. Надо что-то придумать!",
-                 reply_markup=get_markup(get_person(message.chat.id)))
-
-
 @bot.message_handler(commands=['about', 'help'])
 def send_help(message):
     chat_id = message.chat.id
@@ -49,7 +41,7 @@ def send_help(message):
     person = get_person(chat_id)
     end_text = game.check_game_end(person)
     if end_text is not None and end_text != "":
-        bot.send_message(message.chat.id, end_text)
+        bot.send_message(chat_id, end_text)
         return
     text = f'{message.chat.first_name}, Вы управляете "{person.name}". Сейчас вы находитесь в локации "{person.location}". Вам нужно "{person.goal}"'
     bot.send_message(chat_id, text, reply_markup=get_markup(person))
@@ -74,6 +66,25 @@ def handle_query(call):
         return
 
     send_help(call.message)
+
+
+@bot.message_handler(func=lambda message: True)
+def echo_all(message):
+    """
+    Обработка текстовых сообщений
+    Должна идти после остальных обработчиков
+    :param message:
+    :return:
+    """
+    removePrevMenu(message)
+    print(f'Получено сообщение от {message.chat.first_name} {message.chat.last_name}: ' + Fore.CYAN + f'{message.text}')
+    person = get_person(message.chat.id)
+    end_text = game.check_game_end(person)
+    if end_text is not None and end_text != "":
+        bot.send_message(message.chat.id, end_text)
+        return
+    bot.reply_to(message, "Ой, как же кушать хочется. Надо что-то придумать!",
+                 reply_markup=get_markup(get_person(message.chat.id)))
 
 
 def get_markup(person):
