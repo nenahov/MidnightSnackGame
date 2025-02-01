@@ -1,17 +1,20 @@
-import telebot
+from aiogram import Bot, Dispatcher, html, types
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
+from aiogram.filters import CommandStart, Command
 from colorama import init, Fore
-from telebot import types
+import asyncio
+import logging
+import sys
 
 from domain.abstract_game import AbstractGame
 from games_impl.kitchen_game import KitchenGame
 from my_keys import API_TOKEN
 
-
-
 # Авто-восстановление цвета шрифта в выводе на консоль
 init(autoreset=True)
 
-bot = telebot.TeleBot(API_TOKEN)
+dp = Dispatcher()
 
 # словарь для хранения Персонажей (Person) для каждого user_id
 user_person_dict = dict()
@@ -23,32 +26,32 @@ if len(game.get_all_conditions()) != len(set(ids)):
     print(Fore.RED + "Есть повторяющиеся id у состояний!")
 
 
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
+@dp.message(CommandStart())
+async def send_welcome(message):
     chat_id = message.chat.id
     user_person_dict[chat_id] = None
 
     markup = get_markup(get_person(chat_id))
 
-    bot.send_message(chat_id, "Ой, я проснулся в своей комнате от жуткого голода. Мне срочно нужно поесть!",
-                     reply_markup=markup)
+    await message.answer(text="Ой, я проснулся в своей комнате от жуткого голода. Мне срочно нужно поесть!",
+                         reply_markup=markup)
 
 
-@bot.message_handler(commands=['about', 'help'])
-def send_help(message):
+@dp.message(Command(commands=['about', 'help']))
+async def send_help(message):
     chat_id = message.chat.id
     removePrevMenu(message)
     person = get_person(chat_id)
     end_text = game.check_game_end(person)
     if end_text is not None and end_text != "":
-        bot.send_message(chat_id, end_text)
+        await message.answer(text=end_text)
         return
     text = f'{message.chat.first_name}, Вы управляете "{person.name}". Сейчас вы находитесь в локации "{person.location}". Вам нужно "{person.goal}"'
-    bot.send_message(chat_id, text, reply_markup=get_markup(person))
+    await message.answer(text=text, reply_markup=get_markup(person))
 
 
-@bot.callback_query_handler(func=lambda call: True)
-def handle_query(call):
+@dp.callback_query()
+async def handle_query(call):
     chat_id = call.message.chat.id
     # Убираем меню
     removePrevMenu(call.message)
@@ -60,16 +63,16 @@ def handle_query(call):
         condition.apply_state_condition(person)
         end_text = game.check_game_end(person)
         if end_text is not None and end_text != "":
-            bot.send_message(call.message.chat.id, end_text)
+            await call.message.answer(text=end_text)
             return
-        bot.send_message(call.message.chat.id, condition.text, reply_markup=get_markup(person))
+        await call.message.answer(text=condition.text, reply_markup=get_markup(person))
         return
 
-    send_help(call.message)
+    await send_help(call.message)
 
 
-@bot.message_handler(func=lambda message: True)
-def echo_all(message):
+@dp.message()
+async def echo_all(message):
     """
     Обработка текстовых сообщений
     Должна идти после остальных обработчиков
@@ -81,19 +84,26 @@ def echo_all(message):
     person = get_person(message.chat.id)
     end_text = game.check_game_end(person)
     if end_text is not None and end_text != "":
-        bot.send_message(message.chat.id, end_text)
+        await message.reply(text=end_text)
         return
-    bot.reply_to(message, "Ой, как же кушать хочется. Надо что-то придумать!",
-                 reply_markup=get_markup(get_person(message.chat.id)))
+    await message.reply(text="Ой, как же кушать хочется. Надо что-то придумать!",
+                        reply_markup=get_markup(get_person(message.chat.id)))
 
 
 def get_markup(person):
-    markup = types.InlineKeyboardMarkup()
+    buttons = list()
     # В цикле перебрать все game_conditions, которые удовлетворяют условия для персонажа
-    for condition in game.get_conditions_for_person(person):
-        # Добавить меню для перехода в это состояние
-        button = types.InlineKeyboardButton(condition.name, callback_data=condition.id)
-        markup.add(button)
+    sorted_conditions = sorted(game.get_conditions_for_person(person), key=lambda cond: cond.order)
+
+    # Group conditions by their 'order'
+    result = {}
+
+    for cond in sorted_conditions:
+        if cond.order not in result:
+            result[cond.order] = []
+        result[cond.order].append(types.InlineKeyboardButton(text=cond.name, callback_data=cond.id))
+
+    markup = types.InlineKeyboardMarkup(inline_keyboard=list(result.values()))
     return markup
 
 
@@ -106,20 +116,26 @@ def get_person(chat_id):
 
 
 def removePrevMenu(message):
-    try:
-        bot.edit_message_reply_markup(message.chat.id, message.message_id - 1)
-    except:
-        pass
-    try:
-        bot.edit_message_reply_markup(message.chat.id, message.message_id)
-    except:
-        pass
+    t = 2
+    # try:
+    #     message.edit_message_reply_markup(message.chat.id, message.message_id - 1)
+    # except:
+    #     pass
+    # try:
+    #     message.edit_message_reply_markup(message.chat.id, message.message_id)
+    # except:
+    #     pass
 
 
 # Запуск бота
-if __name__ == '__main__':
-    while True:
-        try:
-            bot.polling(none_stop=True)
-        except:
-            pass
+async def main() -> None:
+    # Initialize Bot instance with default bot properties which will be passed to all API calls
+    bot = Bot(token=API_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+
+    # And the run events dispatching
+    await dp.start_polling(bot)
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    asyncio.run(main())
