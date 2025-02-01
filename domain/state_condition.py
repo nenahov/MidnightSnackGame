@@ -31,8 +31,9 @@ class StateCondition:
         - предметы в инвентаре
         - предметы, которые должны исчезнуть из инвентаря
     """
-    def __init__(self, id: str, name: str, location: str, items: set, all_items: set, not_items: set, new_location: str,
-                 items_for_add: set, items_for_remove: set, text: str):
+    def __init__(self,  order: int, id: str, name: str, location: str, items: set, all_items: set, not_items: set,
+                 new_location: str, items_for_add: set, items_for_remove: set, text: str):
+        self.order = order
         self.id = id
         self.name = name
         self.location = location
