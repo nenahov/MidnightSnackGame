@@ -32,7 +32,15 @@ class KitchenGame(AbstractGame):
 
     def check_game_end(self, person: Person) -> str:
         if ('end' in person.inventory) or (person.health <= 0):
-            return 'Игра окончена'
+            res = ''
+            if ('corridorLight' in person.inventory) or ('kitchenLight' in person.inventory):
+                res += 'Ты забыл выключить свет!\n\n'
+            if 'fridge' in person.inventory:
+                res += ('Ты забыл закрыть холодильник!\n'
+                        'Все продукты пропали!\n'
+                        'Теперь надо что-то придумывать, что будет есть вся семья на завтрак!\n\n')
+            res += 'Игра окончена 🏆'
+            return res
         pass
 
 
@@ -58,10 +66,10 @@ game_conditions = [
                    'Сновидения', set(), set(), 'Теперь я сытый и можно поспать! 😴'),
 
     # Лежать и видеть сны
-    StateCondition(2, 'sleep1', 'Видеть сны 💤', 'Сновидения', {'cheese'}, set(), {'meat'},
+    StateCondition(2, 'sleep1', 'Видеть сны 💤', 'Сновидения', {'cheese', 'picture'}, set(), {'meat'},
                    '', set(), set(), 'Снится замечательный сон! 😇'),
 
-    StateCondition(2, 'sleep2', 'Видеть сны 💤', 'Сновидения', {'meat'}, set(), set(),
+    StateCondition(2, 'sleep2', 'Видеть сны 💤', 'Сновидения', {'meat', 'picture'}, {'meat'}, set(),
                    '', set(), set(), 'Снится кошмар! 👹👻😓'),
 
     StateCondition(10, 'wakeUp', 'Проснуться ⏰', 'Сновидения', set(), set(), set(),
