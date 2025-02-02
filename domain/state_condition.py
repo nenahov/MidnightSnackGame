@@ -32,7 +32,7 @@ class StateCondition:
         - предметы, которые должны исчезнуть из инвентаря
     """
     def __init__(self,  order: int, id: str, name: str, location: str, items: set, all_items: set, not_items: set,
-                 new_location: str, items_for_add: set, items_for_remove: set, text: str):
+                 new_location: str, items_for_add: set, items_for_remove: set, text: str, img: str = None):
         self.order = order
         self.id = id
         self.name = name
@@ -41,6 +41,7 @@ class StateCondition:
         self.all_items = all_items
         self.not_items = not_items
         self.text = text
+        self.img = img
         self.new_location = new_location
         self.items_for_add = items_for_add
         self.items_for_remove = items_for_remove

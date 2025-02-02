@@ -65,7 +65,11 @@ async def handle_query(call):
         if end_text is not None and end_text != "":
             await call.message.answer(text=end_text)
             return
-        await call.message.answer(text=condition.text, reply_markup=get_markup(person))
+        if condition.img is not None:
+            photo_file = types.FSInputFile(condition.img)
+            await call.message.answer_photo(caption=condition.text, photo=photo_file, reply_markup=get_markup(person))
+        else:
+            await call.message.answer(text=condition.text, reply_markup=get_markup(person))
         return
 
     await send_help(call.message)
