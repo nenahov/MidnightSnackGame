@@ -12,6 +12,19 @@ class KitchenGame(AbstractGame):
         if random.randint(0, 100) <= 20:
             # С вероятностью 20% включим свет в коридоре
             person.inventory.add('corridorLight')
+
+        if random.randint(0, 100) <= 50:
+            # С вероятностью 50% оставляем фото либо в коридоре, либо на кухне
+            person.inventory.add('pictureInCorridor')
+        else:
+            person.inventory.add('pictureInKitchen')
+
+        # Случайный шифр из 4 неповторяющихся цифр
+        digits = random.sample(range(10), 4)
+        # Преобразуем список цифр в строку
+        code = ''.join(map(str, digits))
+        person.inventory.add('code=' + code)
+        print(f"Шифр: {code}")
         return person
 
     def get_all_conditions(self) -> list[StateCondition]:
@@ -25,10 +38,10 @@ class KitchenGame(AbstractGame):
 
 game_conditions = [
     # Комната
-    StateCondition(1, 'shoesOn', 'Надеть тапочки', 'Комната', set(), set(), {'shoes'},
+    StateCondition(1, 'shoesOn', 'Надеть тапочки 🩰', 'Комната', set(), set(), {'shoes'},
                    '', {'shoes'}, set(), 'В тапочках тепло и уютно!\nМожно идти дальше'),
 
-    StateCondition(1, 'shoesOff', 'Снять тапочки', 'Комната', set(), {'shoes'}, {'corridorLight'},
+    StateCondition(1, 'shoesOff', 'Снять тапочки 🩰', 'Комната', set(), {'shoes'}, set(),
                    '', set(), {'shoes'}, 'Тапочки долой!'),
 
     StateCondition(10, 'corridor->room', 'Зайти в комнату 🚪', 'Коридор', set(), set(), set(),
@@ -41,7 +54,7 @@ game_conditions = [
                    'Коридор', set(), set(), 'Теперь я в коридоре и тут кто-то забыл выключить свет 💡'),
 
     # лечь на кровать, если взяли сыр
-    StateCondition(3, 'sleep', 'Поспать на кровати 🛌', 'Комната', set(), {'cheese'}, {'shoes'},
+    StateCondition(3, 'sleep', 'Поспать на кровати 🛌', 'Комната', {'cheese', 'meat', 'cake'}, set(), {'shoes'},
                    'Сновидения', set(), set(), 'Теперь я сытый и можно поспать! 😴'),
 
     # Лежать и видеть сны
@@ -61,6 +74,13 @@ game_conditions = [
     StateCondition(5, 'corridorLightOff', 'Выключить свет в коридоре', 'Коридор', set(), {'corridorLight'}, set(),
                    '', set(), {'corridorLight'}, 'Опять темно 👀'),
 
+    StateCondition(3, 'corridorLookAround', 'Осмотреться 👀', 'Коридор', set(), {'corridorLight'},
+                   {'corridorLookAround'}, '', {'corridorLookAround'}, set(), 'Пока светло - осмотрелись в коридоре'),
+
+    StateCondition(3, 'corridorFindPicture', 'Поднять листочек 🖼️', 'Коридор', set(),
+                   {'pictureInCorridor', 'corridorLight', 'corridorLookAround'},
+                   {'picture'}, '', {'picture'}, set(), 'Нашли прикольную фотку', '1.png'),
+
     StateCondition(5, 'kitchenLightOn', 'Включить свет на кухне 💡', 'Коридор', set(), set(), {'kitchenLight'},
                    '', {'kitchenLight'}, set(), 'Теперь на кухне светло 💡'),
 
@@ -78,21 +98,25 @@ game_conditions = [
     # открыть холодильник
     StateCondition(3, 'openFridge', 'Открыть холодильник ❄️', 'Кухня', set(), {'kitchenLight'}, {'fridge'},
                    '', {'fridge'}, set(), 'Посмотрим, что тут есть вкусненького?! 🤤'),
-
     # Взять из холодильника сыр
     StateCondition(1, 'takeCheese', 'Сыр! 🧀', 'Кухня', set(), {'fridge'}, {'cheese'},
                    '', {'cheese'}, set(), 'Взяли сыр 🧀'),
     # кусок мяса
     StateCondition(1, 'takeMeat', 'Кусок мяса! 🍖', 'Кухня', set(), {'fridge'}, {'meat'},
                    '', {'meat'}, set(), 'Взяли кусок мяса! 🍖'),
-
     # Пирожное
     StateCondition(1, 'takeCake', 'Пирожное! 🍪', 'Кухня', set(), {'fridge'}, {'cake'},
                    '', {'cake'}, set(), 'Взяли пирожное! 🍪'),
-
     # закрыть холодильник
     StateCondition(3, 'closeFridge', 'Закрыть холодильник ❄️', 'Кухня', set(), {'fridge'}, set(),
                    '', set(), {'fridge'}, 'Итак, я посреди кухни. Что делаем дальше?'),
+
+    StateCondition(3, 'kitchenLookAround', 'Осмотреться 👀', 'Кухня', set(), {'kitchenLight'},
+                   {'kitchenLookAround'}, '', {'kitchenLookAround'}, set(), 'Пока светло - осмотрелись на кухне'),
+
+    StateCondition(3, 'kitchenFindPicture', 'Поднять листочек 🖼️', 'Кухня', set(),
+                   {'pictureInKitchen', 'kitchenLight', 'kitchenLookAround'}, {'picture'}, '', {'picture'}, set(),
+                   'Нашли прикольную фотку', '1.png'),
 
     # из кухни в коридор
     StateCondition(10, 'kitchen->corridorLightOn', 'Выйти в коридор 🚪', 'Кухня', set(), set(), {'corridorLight'},
