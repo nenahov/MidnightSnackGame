@@ -1,11 +1,12 @@
-from aiogram import Bot, Dispatcher, html, types
+import asyncio
+import logging
+import sys
+
+from aiogram import Bot, Dispatcher, types
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 from colorama import init, Fore
-import asyncio
-import logging
-import sys
 
 from domain.abstract_game import AbstractGame
 from games_impl.kitchen_game import KitchenGame
