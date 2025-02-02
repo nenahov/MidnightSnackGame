@@ -41,7 +41,7 @@ async def send_welcome(message):
 @dp.message(Command(commands=['about', 'help']))
 async def send_help(message):
     chat_id = message.chat.id
-    removePrevMenu(message)
+    await removePrevMenu(message)
     person = get_person(chat_id)
     end_text = game.check_game_end(person)
     if end_text is not None and end_text != "":
@@ -55,7 +55,7 @@ async def send_help(message):
 async def handle_query(call):
     chat_id = call.message.chat.id
     # Убираем меню
-    removePrevMenu(call.message)
+    await removePrevMenu(call.message)
     person = get_person(chat_id)
     print(
         f'Получено сообщение от {call.message.chat.first_name} {call.message.chat.last_name}: ' + Fore.LIGHTYELLOW_EX + f'{call.data}')
@@ -84,7 +84,7 @@ async def echo_all(message):
     :param message:
     :return:
     """
-    removePrevMenu(message)
+    await removePrevMenu(message)
     print(f'Получено сообщение от {message.chat.first_name} {message.chat.last_name}: ' + Fore.CYAN + f'{message.text}')
     person = get_person(message.chat.id)
     end_text = game.check_game_end(person)
@@ -96,9 +96,8 @@ async def echo_all(message):
 
 
 def get_markup(person):
-    buttons = list()
     # В цикле перебрать все game_conditions, которые удовлетворяют условия для персонажа
-    sorted_conditions = sorted(game.get_conditions_for_person(person), key=lambda cond: cond.order)
+    sorted_conditions = sorted(game.get_conditions_for_person(person), key=lambda c: c.order)
 
     # Group conditions by their 'order'
     result = {}
@@ -120,23 +119,23 @@ def get_person(chat_id):
     return person
 
 
-def removePrevMenu(message):
-    t = 2
-    # try:
-    #     message.edit_message_reply_markup(message.chat.id, message.message_id - 1)
-    # except:
-    #     pass
-    # try:
-    #     message.edit_message_reply_markup(message.chat.id, message.message_id)
-    # except:
-    #     pass
+async def removePrevMenu(message):
+    try:
+        await message.bot.edit_message_reply_markup(chat_id=message.chat.id, message_id=message.message_id,
+                                                    reply_markup=None)
+    except:
+        pass
+    try:
+        await message.bot.edit_message_reply_markup(chat_id=message.chat.id, message_id=message.message_id - 1,
+                                                    reply_markup=None)
+    except:
+        pass
 
 
 # Запуск бота
 async def main() -> None:
     # Initialize Bot instance with default bot properties which will be passed to all API calls
     bot = Bot(token=API_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-
     # And the run events dispatching
     await dp.start_polling(bot)
 
