@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from domain.state_condition import StateCondition
+
 from domain.person import Person
+from domain.state_condition import StateCondition
 
 
 class AbstractGame(ABC):
@@ -12,6 +13,10 @@ class AbstractGame(ABC):
 
     @abstractmethod
     def check_game_end(self, person: Person) -> str:
+        pass
+
+    @abstractmethod
+    def get_person_inventory_description(self, person: Person) -> str:
         pass
 
     @abstractmethod

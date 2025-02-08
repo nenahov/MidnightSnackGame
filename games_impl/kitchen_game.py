@@ -43,6 +43,28 @@ class KitchenGame(AbstractGame):
             return res
         pass
 
+    def get_person_inventory_description(self, person: Person) -> str:
+        # В person.inventory лежат признаки и предметы
+        # Если в inventory_descriptions есть описание, то в результирующей строке вставляется описание
+        # А иначе ничего не добавляем
+        res = ''
+        for item in inventory_descriptions:
+            if item in person.inventory:
+                res += f'{inventory_descriptions[item]}\n'
+        if res != '':
+            res = '\n\nЧто есть на текущий момент:\n' + res
+        return res
+
+
+inventory_descriptions = {'shoes': '🩰 Тапочки',
+                          'picture': '🖼️ Фото',
+                          'cheese': '🧀 Сыр',
+                          'meat': '🍖 Кусок мяса',
+                          'cake': '🍪 Пирожное',
+                          'corridorLight': '💡 Включен свет в коридоре',
+                          'kitchenLight': '💡 Включен свет на кухне',
+                          'fridge': '❄️ Открыт холодильник'
+                          }
 
 game_conditions = [
     # Комната

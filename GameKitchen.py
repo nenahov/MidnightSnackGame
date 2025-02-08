@@ -22,10 +22,14 @@ user_person_dict = dict()
 game: AbstractGame
 game = KitchenGame()
 
-ids = [cond.id for cond in game.get_all_conditions()]
-if len(game.get_all_conditions()) != len(set(ids)):
-    print(Fore.RED + "Есть повторяющиеся id у состояний!")
 
+def check_conditions_unique():
+    ids = [cond.id for cond in game.get_all_conditions()]
+    if len(game.get_all_conditions()) != len(set(ids)):
+        print(Fore.RED + "Есть повторяющиеся id у состояний!")
+
+
+check_conditions_unique()
 
 @dp.message(CommandStart())
 async def send_welcome(message):
@@ -40,14 +44,14 @@ async def send_welcome(message):
 
 @dp.message(Command(commands=['about', 'help']))
 async def send_help(message):
-    chat_id = message.chat.id
     await removePrevMenu(message)
-    person = get_person(chat_id)
+    person = get_person(message.chat.id)
     end_text = game.check_game_end(person)
     if end_text is not None and end_text != "":
         await message.answer(text=end_text)
         return
     text = f'{message.chat.first_name}, Вы управляете "{person.name}". Сейчас вы находитесь в локации "{person.location}". Вам нужно "{person.goal}"'
+    text += game.get_person_inventory_description(person)
     await message.answer(text=text, reply_markup=get_markup(person))
 
 
